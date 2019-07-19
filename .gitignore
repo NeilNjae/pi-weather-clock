@@ -1,0 +1,13 @@
+*~
+*doc
+*log
+/tmp
+/__pycache__/*
+*pyc
+.ipynb*
+*.sublime-workspace
+.directory/*
+
+# ignore the venv
+weather-reader
+
