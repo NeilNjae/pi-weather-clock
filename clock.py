@@ -5,15 +5,15 @@ import time
 import datetime
 from enum import Enum
 
-
 from gpiozero import DistanceSensor, LED
-
 from adafruit_servokit import ServoKit
+
 kit = ServoKit(channels=16)
 servo = kit.servo[4]
 servo_position = 1
 
 ultrasonic = DistanceSensor(echo=17, trigger=4)
+
 far_led = LED(21)
 med_led = LED(20)
 near_led = LED(16)
@@ -48,20 +48,20 @@ WEATHER_POSITIONS = {
     'Fog': 12
     }
 
-def get_forecast():
+# Location code for Milton Keynes
+LOCATION = '2642465'
+
+def get_forecast(location):
     """Read the forecasts from the BBC"""
     forecasts = []
     # 3-day forecast for Milton Keynes
-    response = requests.get('https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/2642465')
-    # print('Response code', response.status_code)
+    response = requests.get('https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/{}'.format(location))
     
     if response.status_code == 200:
     
         soup = BeautifulSoup(response.content, 'xml')
-        # print(soup.prettify())
         forecasts = []
         for item in soup.find_all('item'):
-            # print(item.title.string)
             item_dict = {}
             summary_pair = item.title.string.split(',')[0]
             summary = summary_pair.split(':')[1].strip()
@@ -69,9 +69,6 @@ def get_forecast():
             for term in item.description.string.split(','):
                 term_parts = term.split(':', maxsplit=1)
                 item_dict[term_parts[0].strip()] = term_parts[1].strip()
-            # item_dict = {term.split(':', maxsplit=1)[0].strip(): term.split(':', maxsplit=1)[1].strip() 
-            #   for term in item.description.string.split(',')}
-            # item_dict['Summary'] = item.title.string.split(',')[0].split(':')[1].strip()
             forecasts.append(item_dict)
             # print(item_dict)
     return forecasts
@@ -79,6 +76,7 @@ def get_forecast():
 
 def find_range_band():
     """Calculate the range band, as measured by the ultrasonic sensor"""
+    print(ultrasonic.distance)
     if ultrasonic.distance > 0.8:
         return RangeBand.FAR
     elif ultrasonic.distance > 0.4:
@@ -116,7 +114,7 @@ def light_leds(range_band):
 
 def servo_target_position(summary):
     """Give the servo angle for this weather"""
-    return int(WEATHER_POSITIONS[summary] * 180  / 12)
+    return 180 - int((WEATHER_POSITIONS[summary] - 1) * 180  / 11)
 
 
 def move_servo(angle):
@@ -134,36 +132,23 @@ def move_servo(angle):
     servo_position = angle
 
 
-forecasts = get_forecast()
+forecasts = get_forecast(LOCATION)
+last_location_refresh = datetime.datetime.now(datetime.timezone.utc)
+# Test data, for when the Pi isn't connected to a network
+# forecasts = [{'Summary': 'Light Rain Showers'}, {'Summary': 'Partly Cloudy'}, {'Summary': 'Sunny'}]
 print(forecasts)
 
 while True:
     range_band = find_range_band()
     summary = summary_of_range(forecasts, range_band)
-    # print(range_band, summary)
     light_leds(range_band)
     servo_target = servo_target_position(summary)
     move_servo(servo_target)
+
+    print(range_band, summary, servo_target, servo_position)
     time.sleep(0.2)
 
-
-# print(forecasts)
-#     
-#         for forecast in forecasts:
-#             print("{} at position {}".format(forecast['Summary'], WEATHER_LOCATIONS[forecast['Summary']]))
-#     
-# while True:
-#     #     print(datetime.datetime.utcnow(), ultrasonic.distance)
-#     if ultrasonic.distance > 0.8:
-#         far_led.on()
-#         med_led.off()
-#         near_led.off()
-#     elif ultrasonic.distance > 0.4:
-#         far_led.off()
-#         med_led.on()
-#         near_led.off()
-#     else:
-#         far_led.off()
-#         med_led.off()
-#         near_led.on()
-# 
+    if (datetime.datetime.now(datetime.timezone.utc) - last_location_refresh).total_seconds() > (30 * 60):
+        forecasts = get_forecast(LOCATION)
+        last_location_refresh = datetime.datetime.now(datetime.timezone.utc)
+        print(forecasts)

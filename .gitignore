@@ -9,5 +9,5 @@
 .directory/*
 
 # ignore the venv
-weather-reader
+weather-clock
 
