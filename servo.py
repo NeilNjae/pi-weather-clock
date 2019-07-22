@@ -1,6 +1,3 @@
-import time
-import datetime
-from gpiozero import DistanceSensor, LED
 
 from adafruit_servokit import ServoKit
 kit = ServoKit(channels=16)
