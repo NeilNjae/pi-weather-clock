@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source /home/pi/pi-weather-clock/weather-clock/bin/activate
+python /home/pi/pi-weather-clock/clock.py
+
