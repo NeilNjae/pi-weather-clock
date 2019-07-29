@@ -35,20 +35,28 @@ LOCATION = '2642465'
 
 def get_forecast(location):
     """Read the forecasts from the BBC"""
-    forecasts = []
+
+     # default value if we can't read the forecast
+    forecasts = [{'Summary': 'Sunny'} * 3]
+    
     # 3-day forecast for Milton Keynes
     response = requests.get('https://weather-broker-cdn.api.bbci.co.uk/en/forecast/rss/3day/{}'.format(location))
     
-    if response.status_code == 200:
+    if response.status_code == 200: # success
     
         soup = BeautifulSoup(response.content, 'xml')
         forecasts = []
         for item in soup.find_all('item'):
             item_dict = {}
+            # summary looks like "Tonight: Light Rain, Minimum Temperature: 12⁰C (53⁰F)"
+            # split it on the comma to get the "Tonight: Light Rain" part...
             summary_pair = item.title.string.split(',')[0]
+            # ... then split that on the colon to get the "Light Rain"
             summary = summary_pair.split(':')[1].strip()
             item_dict['Summary'] = summary
+            # The description text is a series of terms, separated by commas
             for term in item.description.string.split(','):
+                # each term is a title and value, separated by a colon
                 term_parts = term.split(':', maxsplit=1)
                 item_dict[term_parts[0].strip()] = term_parts[1].strip()
             forecasts.append(item_dict)
