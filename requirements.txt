@@ -13,7 +13,7 @@ chardet==3.0.4
 colorzero==1.1
 gpiozero==1.5.1
 idna==2.8
-lxml==4.3.4
+lxml==4.6.2
 requests==2.22.0
 rpi-ws281x==4.2.2
 RPi.GPIO==0.6.5
