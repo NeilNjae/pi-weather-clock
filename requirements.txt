@@ -20,4 +20,4 @@ RPi.GPIO==0.6.5
 soupsieve==1.9.2
 spidev==3.4
 sysv-ipc==1.0.0
-urllib3==1.25.3
+urllib3==1.25.8
