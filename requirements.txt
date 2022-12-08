@@ -8,7 +8,7 @@ Adafruit-PlatformDetect==1.2.1
 Adafruit-PureIO==0.2.3
 beautifulsoup4==4.7.1
 bs4==0.0.1
-certifi==2019.6.16
+certifi==2022.12.7
 chardet==3.0.4
 colorzero==1.1
 gpiozero==1.5.1
